@@ -1,6 +1,8 @@
 import os
 import cv2
 import numpy as np
+from scipy import ndimage
+import matplotlib.pyplot as plt
 
 #--------- Entradas ---------
 def seleccionar_imagen(x):
@@ -52,6 +54,7 @@ def aritmeticas_img (img1, img2):
 	suma = cv2.add(img1, img2)
 	resta = cv2.subtract(img1, img2)
 	mult = cv2.multiply(img1, img2)
+
 	return suma, resta, mult
 
 # Operaciones lógicas
@@ -60,14 +63,15 @@ def logicas (img_bin1, img_bin2):
 	or_img = cv2.bitwise_or(img_bin1, img_bin2)
 	not_img = cv2.bitwise_not(img_bin1)
 	xor_img = cv2.bitwise_xor(img_bin1, img_bin2)
+
 	return and_img, or_img, not_img, xor_img
 
+#--------- Main ---------
 
-
-
-opc = int(input("Operación? \n1. Aritméticas con escalar \n2. Aritméticas entre imágenes \n3. Lógicas \n4. Añadir ruido \n\nRespuesta: "))
+opc = int(input("Operación? \n1. Aritméticas con escalar \n2. Aritméticas entre imágenes \n3. Lógicas \n4. Añadir ruido \n5. Etiquetado de componentes conexas\n\nRespuesta: "))
 
 match opc:
+	#--------- Operaciones aritméticas con escalar ---------
 	case 1:
 		img1 = seleccionar_imagen(0)
 		x = int(input("Escalar para la suma: "))
@@ -84,6 +88,7 @@ match opc:
 		cv2.waitKey(0)
 		cv2.destroyAllWindows()
 
+	#--------- Operaciones aritméticas entre imágenes ---------	
 	case 2:
 		img1, img2 = seleccionar_imagen (1)
 		img2, img_bin1, img_bin2 = tratamiento(img1, img2)
@@ -99,6 +104,7 @@ match opc:
 		cv2.waitKey(0)
 		cv2.destroyAllWindows()
 
+	#--------- Operaciones lógicas ---------
 	case 3:
 		img1, img2 = seleccionar_imagen (1)
 		_, img_bin1, img_bin2 = tratamiento(img1, img2)
@@ -115,8 +121,8 @@ match opc:
 		cv2.waitKey(0)
 		cv2.destroyAllWindows()
 
+	#--------- Ruido ---------
 	case 4:
-		#--------- Ruido ---------
 		img1 = seleccionar_imagen(0)
 		porcentaje_ruido = (int(input("Porcentaje de ruido? [0 - 100] ")))/100			# Parámetro: porcentaje de ruido (entre 0 y 1)
 
@@ -138,6 +144,55 @@ match opc:
 		cv2.imshow('Con ruido Sal y Pimienta', ruido)
 		cv2.waitKey(0)
 		cv2.destroyAllWindows()
+
+	#--------- Vecinidad ---------
+	case 5:
+		imagen_binaria = np.array([
+			[0, 0, 0, 1, 1, 0, 0, 0],
+			[0, 1, 1, 1, 1, 1, 0, 0],
+			[0, 1, 1, 0, 0, 1, 1, 0],
+			[0, 0, 0, 1, 1, 0, 0, 0],
+			[0, 0, 1, 1, 0, 0, 1, 1],
+			[0, 1, 1, 1, 1, 1, 1, 0],
+			[0, 0, 0, 1, 0, 0, 0, 0]
+			], dtype=int)
+
+		# Definir vecindades: 4-conexión y 8-conexión
+		vecindad_4 = np.array([	
+								[0, 1, 0],
+								[1, 1, 1],
+								[0, 1, 0]
+								], dtype=int)
+		vecindad_8 = np.ones((3, 3), dtype=int) # Matriz de 8-conexión
+
+		# Etiquetado con vecindad 4
+		etiquetas_4, num_objetos_4 = ndimage.label(imagen_binaria, structure=vecindad_4)
+
+		# Etiquetado con vecindad 8
+		etiquetas_8, num_objetos_8 = ndimage.label(imagen_binaria, structure=vecindad_8)
+
+		# Mostrar el número de objetos detectados
+		print("Número de objetos con vecindad 4:", num_objetos_4)
+		print("Número de objetos con vecindad 8:", num_objetos_8)
+
+		# Visualizar los resultados para comparar las etiquetas generadas con cada tipo de vecindad
+		fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+
+		# Imagen binaria original
+		axes[0].imshow(imagen_binaria, cmap='gray')
+		axes[0].set_title("Imagen Binaria")
+		axes[0].axis('off')
+
+		# Etiquetado con vecindad 4
+		axes[1].imshow(etiquetas_4, cmap='nipy_spectral')
+		axes[1].set_title(f"Vecindad 4 - {num_objetos_4} Objetos")
+		axes[1].axis('off')
+
+		# Etiquetado con vecindad 8
+		axes[2].imshow(etiquetas_8, cmap='nipy_spectral')
+		axes[2].set_title(f"Vecindad 8 - {num_objetos_8} Objetos")
+		axes[2].axis('off')
+		plt.show()
 
 	case _:
 		print("Opción no válida")
