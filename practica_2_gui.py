@@ -180,35 +180,41 @@ btn_cargar2 = ctk.CTkButton(frame_izq, text="Cargar Imagen 2", command=lambda: c
 def actualizar_parametros(event=None):
     opcion = combo_operacion.get()
 
-    # Ocultar todo inicialmente
+    # Ocultar todo primero
     for w in [label_x, entry_x, label_y, entry_y, label_z, entry_z, btn_cargar1, btn_cargar2]:
         w.pack_forget()
 
-    # Mostrar según operación
+    # Reiniciar textos por defecto
+    btn_cargar1.configure(text="Cargar Imagen 1")
+    btn_cargar2.configure(text="Cargar Imagen 2")
+
+    # Mostrar y configurar según la opción
     if opcion == "Aritméticas con escalar":
         label_x.configure(text="Escalar para Suma:")
         label_y.configure(text="Escalar para Resta:")
         label_z.configure(text="Escalar para Multiplicación:")
+
         label_x.pack(pady=3); entry_x.pack(pady=3)
         label_y.pack(pady=3); entry_y.pack(pady=3)
         label_z.pack(pady=3); entry_z.pack(pady=3)
         btn_cargar1.pack(pady=5)
 
     elif opcion == "Aritméticas entre imágenes":
-        btn_cargar1.configure(text="Cargar Imagen 1")
-        btn_cargar2.configure(text="Cargar Imagen 2")
+        btn_cargar1.configure(text="Cargar Imagen 1 (A)")
+        btn_cargar2.configure(text="Cargar Imagen 2 (B)")
         btn_cargar1.pack(pady=5)
         btn_cargar2.pack(pady=5)
 
     elif opcion == "Lógicas":
-        btn_cargar1.configure(text="Cargar Imagen 1 (Binaria 1)")
-        btn_cargar2.configure(text="Cargar Imagen 2 (Binaria 2)")
+        btn_cargar1.configure(text="Cargar Imagen 1 (Binaria A)")
+        btn_cargar2.configure(text="Cargar Imagen 2 (Binaria B)")
         btn_cargar1.pack(pady=5)
         btn_cargar2.pack(pady=5)
 
     elif opcion == "Ruido Sal y Pimienta":
         label_x.configure(text="Porcentaje de ruido (0–100):")
         label_x.pack(pady=3); entry_x.pack(pady=3)
+        btn_cargar1.configure(text="Cargar Imagen")
         btn_cargar1.pack(pady=5)
 
     elif opcion == "Etiquetado de componentes":
