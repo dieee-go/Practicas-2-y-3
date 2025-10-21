@@ -91,6 +91,28 @@ def ejecutar_operacion():
         xor_img = cv2.bitwise_xor(bin1, bin2)
         resultado = np.hstack((and_img, or_img, xor_img))
         mostrar_imagen(resultado, panel_resultado)
+        
+    elif opcion == "Relacionales":
+        if img1 is None or img2 is None:
+            messagebox.showerror("Error", "Cargue ambas imágenes para comparar.")
+            return
+
+        # Redimensionar img2 si no tiene el mismo tamaño
+        img2_rz = cv2.resize(img2, (img1.shape[1], img1.shape[0]))
+
+        # Comparaciones relacionales
+        mayor = cv2.compare(img1, img2_rz, cv2.CMP_GT)
+        menor = cv2.compare(img1, img2_rz, cv2.CMP_LT)
+        igual = cv2.compare(img1, img2_rz, cv2.CMP_EQ)
+
+        cv2.putText(mayor, ">", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 2)
+        cv2.putText(menor, "<", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 2)
+        cv2.putText(igual, "=", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 2)
+
+        # Combinar resultados
+        resultado = np.hstack((mayor, menor, igual))
+        mostrar_imagen(resultado, panel_resultado)
+
 
     elif opcion == "Ruido Sal y Pimienta":
         try:
@@ -157,8 +179,9 @@ combo_operacion = ctk.CTkComboBox(frame_izq, values=[
     "Aritméticas con escalar",
     "Aritméticas entre imágenes",
     "Lógicas",
+    "Relacionales",
     "Ruido Sal y Pimienta",
-    "Etiquetado de componentes"
+    "Etiquetado de componentes"    
 ])
 combo_operacion.pack(pady=5)
 
@@ -208,6 +231,12 @@ def actualizar_parametros(event=None):
     elif opcion == "Lógicas":
         btn_cargar1.configure(text="Cargar Imagen 1 (Binaria A)")
         btn_cargar2.configure(text="Cargar Imagen 2 (Binaria B)")
+        btn_cargar1.pack(pady=5)
+        btn_cargar2.pack(pady=5)
+
+    elif opcion == "Relacionales":
+        btn_cargar1.configure(text="Cargar Imagen 1")
+        btn_cargar2.configure(text="Cargar Imagen 2")
         btn_cargar1.pack(pady=5)
         btn_cargar2.pack(pady=5)
 
