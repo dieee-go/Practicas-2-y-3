@@ -18,6 +18,7 @@ root.geometry("1100x700")
 # Variables globales
 img1 = None
 img2 = None
+resultado_actual = None
 panel_original = None
 panel_resultado = None
 
@@ -35,16 +36,49 @@ def cargar_imagen(num):
         img2 = imagen
         mostrar_imagen(imagen, panel_resultado)
 
-def mostrar_imagen(img, panel):
-    """Convierte una imagen OpenCV a formato Tkinter y la muestra"""
+def mostrar_imagen(img, panel, es_resultado=False):
+    """Convierte una imagen OpenCV a formato CTkImage y la muestra"""
+    global resultado_actual
+
     if img is None:
         return
+
+    # Guardar si es resultado
+    if es_resultado:
+        resultado_actual = img.copy()
+
     img_rgb = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     im = Image.fromarray(img_rgb)
     im = im.resize((400, 300))
-    imgtk = ImageTk.PhotoImage(im)
-    panel.configure(image=imgtk)
-    panel.image = imgtk
+    ctk_image = ctk.CTkImage(light_image=im, dark_image=im, size=(400, 300))
+    panel.configure(image=ctk_image, text="")
+    panel.image = ctk_image
+
+def guardar_imagen(imagen, nombre_sugerido="imagen.png"):
+    if imagen is None:
+        messagebox.showerror("Error", "No hay ninguna imagen para guardar.")
+        return
+    ruta = filedialog.asksaveasfilename(
+        defaultextension=".png",
+        filetypes=[("PNG", "*.png"), ("JPEG", "*.jpg"), ("BMP", "*.bmp"), ("TIFF", "*.tiff")],
+        initialfile=nombre_sugerido,
+        title="Guardar imagen"
+    )
+    if not ruta:
+        return
+    try:
+        cv2.imwrite(ruta, imagen)
+        messagebox.showinfo("Éxito", f"Imagen guardada en:\n{ruta}")
+    except Exception as e:
+        messagebox.showerror("Error", f"No se pudo guardar la imagen:\n{e}")
+
+def guardar_original():
+    global img1
+    guardar_imagen(img1, "original.png")
+
+def guardar_resultado():
+    global resultado_actual
+    guardar_imagen(resultado_actual, "resultado.png")
 
 def ejecutar_operacion():
     global img1, img2
@@ -67,7 +101,7 @@ def ejecutar_operacion():
         resta = cv2.subtract(img1, y)
         mult = cv2.multiply(img1, z)
         resultado = np.hstack((suma, resta, mult))
-        mostrar_imagen(resultado, panel_resultado)
+        mostrar_imagen(resultado, panel_resultado, es_resultado=True)
 
     elif opcion == "Aritméticas entre imágenes":
         if img2 is None:
@@ -78,7 +112,7 @@ def ejecutar_operacion():
         resta = cv2.subtract(img1, img2_rz)
         mult = cv2.multiply(img1, img2_rz)
         resultado = np.hstack((suma, resta, mult))
-        mostrar_imagen(resultado, panel_resultado)
+        mostrar_imagen(resultado, panel_resultado, es_resultado=True)
 
     elif opcion == "Lógicas":
         if img2 is None:
@@ -90,7 +124,7 @@ def ejecutar_operacion():
         or_img = cv2.bitwise_or(bin1, bin2)
         xor_img = cv2.bitwise_xor(bin1, bin2)
         resultado = np.hstack((and_img, or_img, xor_img))
-        mostrar_imagen(resultado, panel_resultado)
+        mostrar_imagen(resultado, panel_resultado, es_resultado=True)
         
     elif opcion == "Relacionales":
         if img1 is None or img2 is None:
@@ -111,8 +145,7 @@ def ejecutar_operacion():
 
         # Combinar resultados
         resultado = np.hstack((mayor, menor, igual))
-        mostrar_imagen(resultado, panel_resultado)
-
+        mostrar_imagen(resultado, panel_resultado, es_resultado=True)
 
     elif opcion == "Ruido Sal y Pimienta":
         try:
@@ -127,7 +160,7 @@ def ejecutar_operacion():
         coords_pimienta = [np.random.randint(0, i - 1, pix_ruido // 2) for i in img1.shape]
         ruido[coords_sal[0], coords_sal[1]] = 255
         ruido[coords_pimienta[0], coords_pimienta[1]] = 0
-        mostrar_imagen(ruido, panel_resultado)
+        mostrar_imagen(resultado, panel_resultado, es_resultado=True)
 
     elif opcion == "Etiquetado de componentes":
         # Verificar si hay imagen cargada
@@ -274,5 +307,14 @@ panel_original = ctk.CTkLabel(frame_imgs, text="")
 panel_original.pack(pady=5)
 panel_resultado = ctk.CTkLabel(frame_imgs, text="")
 panel_resultado.pack(pady=5)
+
+frame_botones = ctk.CTkFrame(frame_imgs)
+frame_botones.pack(pady=10)
+
+btn_guardar_original = ctk.CTkButton(frame_botones, text="💾 Guardar Imagen Original", command=guardar_original)
+btn_guardar_original.pack(side="left", padx=10)
+
+btn_guardar_resultado = ctk.CTkButton(frame_botones, text="💾 Guardar Resultado", command=guardar_resultado)
+btn_guardar_resultado.pack(side="left", padx=10)
 
 root.mainloop()
